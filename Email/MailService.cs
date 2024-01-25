@@ -1,0 +1,39 @@
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using Microsoft.Extensions.Options;
+using MimeKit;
+
+namespace BlogApi.Email
+{
+    public interface IMailService
+    {
+        Task SendEmailAsync(Mail mail);
+    }
+
+    public class MailService : IMailService
+    {
+        private readonly MailSettings _mailSettings;
+
+        public MailService(IOptions<MailSettings> mailSettings)
+        {
+            _mailSettings = mailSettings.Value;
+        }
+
+        public async Task SendEmailAsync(Mail mail)
+        {
+            var message = new MimeMessage();
+
+            message.From.Add(new MailboxAddress(_mailSettings.DisplayName, _mailSettings.Mail));
+            message.To.Add(MailboxAddress.Parse(mail.To));
+
+            message.Subject = mail.Subject;
+            message.Body = new BodyBuilder { HtmlBody = mail.Body }.ToMessageBody();
+
+            using var smtp = new SmtpClient();
+            smtp.Connect(_mailSettings.Host, _mailSettings.Port, SecureSocketOptions.StartTls);
+            smtp.Authenticate(_mailSettings.Username, _mailSettings.Password);
+            await smtp.SendAsync(message);
+            smtp.Disconnect(true);
+        }
+    }
+}

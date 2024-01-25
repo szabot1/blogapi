@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using BlogApi.Models;
 using BlogApi.Repositories;
+using BlogApi.Email;
 
 namespace BlogApi.Controllers;
 
@@ -10,11 +11,26 @@ public class UserController : ControllerBase
 {
     private readonly IUserRepository _repository;
     private readonly IPostRepository _postRepository;
+    private readonly IMailService _mailService;
 
-    public UserController(IUserRepository repository, IPostRepository postRepository)
+    public UserController(IUserRepository repository, IPostRepository postRepository, IMailService mailService)
     {
         _repository = repository;
         _postRepository = postRepository;
+        _mailService = mailService;
+    }
+
+    [HttpPost("send-email")]
+    public async Task SendEmail(MailDto emailDto)
+    {
+        var email = new Mail
+        {
+            To = emailDto.To,
+            Subject = emailDto.Subject,
+            Body = emailDto.Body
+        };
+
+        await _mailService.SendEmailAsync(email);
     }
 
     [HttpGet]

@@ -1,8 +1,12 @@
 using BlogApi.Data;
+using BlogApi.Email;
 using BlogApi.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+builder.Services.AddTransient<IMailService, MailService>();
 
 builder.Services.AddDbContext<BlogDbContext>(options =>
 {
